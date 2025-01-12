@@ -16,7 +16,7 @@ myresult = mycursor.fetchall()
 for x in myresult:
     print(x)
 
-mycursor.execute( "SELECT * FROM Candidates")
+mycursor.execute( "SELECT * FROM Education WHERE candidate_id = 82")
 
 myresult = mycursor.fetchall()
 

@@ -1,123 +1,162 @@
 import streamlit as st
-from PyPDF2 import PdfReader
-import docx2txt
-import json
-import os
-from json_store import store_json
-from create_json import create_json
 
-# Function to extract text from a PDF file
-def extract_text_from_pdf(file):
-    reader = PdfReader(file)
-    text = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
-    return text
+def display_full_candidate_details(candidate):
+    """
+    Display the full details of a candidate on a separate page with styled tags for skills.
+    """
 
-# Function to extract text from a DOCX file
-def extract_text_from_docx(file):
-    doc = docx2txt.process(file)
-    return doc
+    if candidate:
+        # Format skills as a list
+        candidate["skills"] = (
+            candidate["skills"].split("; ") if candidate.get("skills") else []
+        )
+        candidate["education"] = (
+            candidate["education"].split("; ") if candidate.get("education") else []
+        )
+        candidate["work_experience"] = (
+            candidate["work_experience"].split("; ") if candidate.get("work_experience") else []
+        )
+    if candidate:
+        st.title(f"{candidate['name']}")
+    display_info(candidate)
 
-# Save JSON files to the Temp directory
-def save_json_files(json_files, directory="Temp"):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    for file_name, content in json_files.items():
-        with open(os.path.join(directory, file_name), "w") as f:
-            f.write(content)
+    st.markdown("---")
+    if candidate:
+        # Education
+        st.subheader("🎓 Education")
+        education = candidate.get("education", [])
+        if education:
+            for edu in education:
+                degree, institution, year = parse_education_entry(edu)
+                display_education(institution,degree,
+                    graduation_year=f"Graduation Year: {year}",
+                )
+        else:
+            st.write("No education details available.")
 
-# Load JSON files from the Temp directory
-def load_json_files(directory="Temp"):
-    json_files = {}
-    if os.path.exists(directory):
-        for file_name in os.listdir(directory):
-            if file_name.endswith(".json"):
-                with open(os.path.join(directory, file_name), "r") as f:
-                    json_files[file_name] = f.read()
-    return json_files
+        # Work Experience Section
+        st.subheader("💼 Work Experience")
+        experience = candidate.get("work_experience", [])
+        if experience:
+            for exp in experience:
+                position, company, years, description = parse_experience_entry(exp)
+                display_experience(
+                    position=position,
+                    company=company,
+                    years=f"Experience: {years}",
+                description= description,
+                )
+        else:
+            st.write("No work experience available.")
 
-# Main function to run the Streamlit app
-def main():
-    st.title("Document to Text Converter")
-    st.markdown("Upload PDF or DOCX files, and process them into editable JSON files.")
+        # Skills as tags
+        st.subheader("🛠️ Skills")
+        skills = candidate.get("skills", [])
+        if skills:
+            display_skills(skills)
+        else:
+            st.write("No skills available.")
 
-    # Display JSON files from the Temp directory
-    st.header("Previously Saved JSON Files")
-    saved_json_files = load_json_files()
-    if saved_json_files:
-        for file_name, content in saved_json_files.items():
-            with st.expander(file_name):
-                st.text_area(f"Content of {file_name}", content, height=200, key=f"saved_{file_name}")
-    else:
-        st.info("No previously saved JSON files found in the Temp directory.")
 
-    # File uploader for multiple files
-    uploaded_files = st.file_uploader("Upload PDF or DOCX files", type=["pdf", "docx"], accept_multiple_files=True)
+def display_education(instution_name, degree, graduation_year):
+    """
+    Display a card-like component for better readability.
+    """
+    st.markdown(f"""
+    <div style="
+        border-radius: 10px; 
+        padding: 15px; 
+        margin-bottom: 20px; 
+        background-color: #262730;
+        box-shadow: 0px 5px 5px #393A48;
+    ">
+        <h4 style="margin: 0; color: #FAFAFA;">{instution_name}</h4>
+        <p style="margin: 5px 0 0; color: #f0f3f4;"><b>{degree}</b></p>
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{graduation_year}</b></p>  
+    </div>
+    """, unsafe_allow_html=True)
 
-    if "processed_file" not in st.session_state:
-        st.session_state["processed_file"] = None
-    if "resume_text" not in st.session_state:
-        st.session_state["resume_text"] = None
-    if "json_files" not in st.session_state:
-        st.session_state["json_files"] = {}
+def display_experience(company, position, years,description):
+    """
+    Display a card-like component for better readability.
+    """
+    st.markdown(f"""
+    <div style="
+        border-radius: 10px; 
+        padding: 15px; 
+        margin-bottom: 20px; 
+        background-color: #262730;
+        box-shadow: 0px 5px 5px #393A48;
+    ">
+        <h4 style="margin: 0; color: #FAFAFA;">{company}</h4>
+        <p style="margin: 5px 0 0; color: #f0f3f4;"><b>{position}</b></p>
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{years}</b></p>  
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{description}</b></p>  
+    </div>
+    """, unsafe_allow_html=True)
+def display_skills(skills):
+    """
+    Display a card-like component for better readability.
+    """
+    skills_html = "".join([
+        f"""<span style="
+                    border-radius: 10px; 
+                    padding: 9px; 
+                    margin: 10px 5px 0 0; 
+                    background-color: #262730;
+                    box-shadow: 0 3px 9px #e74c3c; 
+                    display: inline-block; 
+                    background-color: #FF4B4B; 
+                    color: white; 
+                    border-radius: 12px; 
+                    font-size: 12px;"><b>{skill}</b></span>"""
+        for skill in skills
+    ])
+    st.markdown(skills_html, unsafe_allow_html=True)
 
-    # Process button
-    if uploaded_files:
-        st.write(f"You uploaded {len(uploaded_files)} files.")
+def display_info(candidate):
+    """
+    Display a card-like component for better readability.
+    """
+    if candidate:
+        st.markdown(f"""
+        <div style="
+            border-radius: 10px; 
+            padding: 15px; 
+            margin-bottom: 20px; 
+            background-color: #262730;
+            box-shadow: 0px 5px 5px #393A48;
+        ">
+            <h4 style="margin: 0; color: #FAFAFA;">Email: {candidate['email']}</h4>  
+            <h4 style="margin: 0; color: #FAFAFA;">Phone:{candidate['phone_number']}</h4>
+            <h4 style="margin: 0; color: #FAFAFA;">Location: {candidate['location']}</h4>
+        </div>
+        """, unsafe_allow_html=True)
 
-        if st.button("Process Resumes"):
-            # Simulate processing the first file only for simplicity
-            file_to_process = uploaded_files[0]
+def parse_education_entry(edu_entry):
+    """
+    Parse an education entry into its components.
+    Format: 'degree from institution (year)'
+    """
+    try:
+        degree, rest = edu_entry.split(' from ')
+        institution, year = rest.split(' (')
+        year = year.replace(')', '')
+        return degree, institution, year
+    except ValueError:
+        return edu_entry, "Unknown Institution", "Unknown Year"
 
-            try:
-                if file_to_process.name.endswith(".pdf"):
-                    st.session_state["resume_text"] = extract_text_from_pdf(file_to_process)
-                elif file_to_process.name.endswith(".docx"):
-                    st.session_state["resume_text"] = extract_text_from_docx(file_to_process)
-                else:
-                    st.warning(f"Unsupported file type: {file_to_process.name}")
-                    st.stop()
 
-                st.session_state["processed_file"] = file_to_process.name
-
-                # Create JSON files from the processed resume
-                with st.spinner("Processing resume and creating JSON files..."):
-                    create_json(st.session_state["resume_text"])
-
-                # Load JSON files for editing
-                st.session_state["json_files"] = load_json_files()
-
-                st.rerun()
-
-            except Exception as e:
-                st.error(f"Error processing {file_to_process.name}: {e}")
-
-    if st.session_state["processed_file"]:
-        st.header(f"Processing: {st.session_state['processed_file']}")
-
-        # Show resume text in a dropdown section
-        with st.expander("Resume Text"):
-            st.text_area("Extracted Text", st.session_state["resume_text"], height=300)
-
-        # Show and edit JSON files
-        edited_json_files = {}
-        for file_name, content in st.session_state["json_files"].items():
-            with st.expander(file_name):
-                edited_content = st.text_area(f"Edit {file_name}", content, height=200)
-                edited_json_files[file_name] = edited_content
-
-        # Save changes and trigger next function
-        if st.button("Save and Proceed"):
-            save_json_files(edited_json_files)
-            st.session_state["json_files"] = edited_json_files
-
-            # Store JSON files in the database
-            with st.spinner("Saving and storing JSON files..."):
-                store_json()
-
-            st.success("Files saved and stored in the database. Starting next function...")
-            # Add your next function here
-    else:
-        st.info("Upload and process a file to begin.")
-
-if __name__ == "__main__":
-    main()
+def parse_experience_entry(exp_entry):
+    """
+    Parse a work experience entry into its components.
+    Format: 'position at company (years)'
+    """
+    try:
+        position, rest = exp_entry.split(' at ')
+        rest, description = rest.split(' desc')
+        company, years = rest.split(' (')
+        years = years.replace(' years)', '')
+        return position, company, years, description
+    except ValueError:
+        return exp_entry, "Unknown Company", "Unknown Duration"

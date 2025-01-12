@@ -21,7 +21,6 @@ def create_connection():
         return None
 
 
-
 def fetch_candidate_details(connection, candidate_id):
     cursor = connection.cursor(dictionary=True)
     cursor.execute("USE ResumeDatabase;")
@@ -33,7 +32,7 @@ def fetch_candidate_details(connection, candidate_id):
             CONCAT(e.degree, ' from ', e.institution, ' (', e.graduation_year, ')') 
             SEPARATOR '; ') AS education,
         GROUP_CONCAT(DISTINCT 
-            CONCAT(w.position, ' at ', w.company, ' (', w.years_experience, ' years)') 
+            CONCAT(w.position, ' at ', w.company, ' (', w.years_experience, ' years), desc', w.description) 
             SEPARATOR '; ') AS work_experience,
         GROUP_CONCAT(DISTINCT 
             CONCAT(s.skill_name, ' (', s.skill_level, ')') 
@@ -114,10 +113,14 @@ def insert_education_data(cursor, candidate_id, education_data):
                 VALUES (%s, %s, %s, %s)"""
     for edu in education_data:
         try:
-            dt = datetime.datetime.strptime(edu['end_date'], '%Y-%m-%d')
-            year = str(dt.year)
+            if edt == "Current" or edt == "Present" or edt == "Not Available":
+                edt = datetime.datetime.today()
+            else:
+                dt = datetime.datetime.strptime(edu['end_date'], '%Y-%m-%d')
+                year = str(dt.year)
+
         except Exception as e:
-            year = "Not Available"
+            year = 0
 
         cursor.execute(query, (
             candidate_id,
@@ -139,7 +142,7 @@ def insert_work_experience_data(cursor, candidate_id, work_experience_data):
         sdt = datetime.datetime.strptime(sdt,'%Y-%m-%d')
 
         try:
-            if edt == "Current" or edt == "Present":
+            if edt == "Current" or edt == "Present" or edt == "Not Available":
                 edt = datetime.datetime.today()
             else:
                 edt = datetime.datetime.strptime(edt,'%Y-%m-%d')
@@ -147,7 +150,7 @@ def insert_work_experience_data(cursor, candidate_id, work_experience_data):
             experience = str(relativedelta(edt, sdt).years)
 
         except Exception as e:
-            experience = "Not Available"
+            experience = 0
 
         cursor.execute(query, (
             candidate_id,

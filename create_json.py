@@ -112,7 +112,7 @@ def process_resume(resume_text):
         # Create single agent and task
         agents = create_agents()
         task = create_single_task(agents[0], resume_text)
-        crew = Crew(agents=agents, tasks=[task], verbose=True)
+        crew = Crew(agents=agents, tasks=[task], verbose=False)
 
         # Get result and parse JSON
         result = crew.kickoff()

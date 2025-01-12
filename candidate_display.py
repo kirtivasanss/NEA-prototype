@@ -28,10 +28,8 @@ def display_full_candidate_details(candidate):
         if education:
             for edu in education:
                 degree, institution, year = parse_education_entry(edu)
-                display_card(
-                    title=degree,
-                    subtitle=institution,
-                    years=f"Graduation Year: {year}",
+                display_education(institution,degree,
+                    graduation_year=f"Graduation Year: {year}",
                 )
         else:
             st.write("No education details available.")
@@ -41,11 +39,12 @@ def display_full_candidate_details(candidate):
         experience = candidate.get("work_experience", [])
         if experience:
             for exp in experience:
-                position, company, years = parse_experience_entry(exp)
-                display_card(
-                    title=position,
-                    subtitle=company,
+                position, company, years, description = parse_experience_entry(exp)
+                display_experience(
+                    position=position,
+                    company=company,
                     years=f"Experience: {years}",
+                description= description,
                 )
         else:
             st.write("No work experience available.")
@@ -59,7 +58,7 @@ def display_full_candidate_details(candidate):
             st.write("No skills available.")
 
 
-def display_card(title, subtitle, years):
+def display_education(instution_name, degree, graduation_year):
     """
     Display a card-like component for better readability.
     """
@@ -71,14 +70,30 @@ def display_card(title, subtitle, years):
         background-color: #262730;
         box-shadow: 0px 5px 5px #393A48;
     ">
-        <h4 style="margin: 0; color: #FAFAFA;">{title}</h4>
-        <p style="margin: 5px 0 0; color: #f0f3f4;"><b>{subtitle}</b></p>
-        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{years}</b></p> 
-         
-         
+        <h4 style="margin: 0; color: #FAFAFA;">{instution_name}</h4>
+        <p style="margin: 5px 0 0; color: #f0f3f4;"><b>{degree}</b></p>
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{graduation_year}</b></p>  
     </div>
     """, unsafe_allow_html=True)
 
+def display_experience(company, position, years,description):
+    """
+    Display a card-like component for better readability.
+    """
+    st.markdown(f"""
+    <div style="
+        border-radius: 10px; 
+        padding: 15px; 
+        margin-bottom: 20px; 
+        background-color: #262730;
+        box-shadow: 0px 5px 5px #393A48;
+    ">
+        <h4 style="margin: 0; color: #FAFAFA;">{company}</h4>
+        <p style="margin: 5px 0 0; color: #f0f3f4;"><b>{position}</b></p>
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{years}</b></p>  
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{description}</b></p>  
+    </div>
+    """, unsafe_allow_html=True)
 def display_skills(skills):
     """
     Display a card-like component for better readability.
@@ -139,8 +154,9 @@ def parse_experience_entry(exp_entry):
     """
     try:
         position, rest = exp_entry.split(' at ')
+        rest, description = rest.split(' desc')
         company, years = rest.split(' (')
         years = years.replace(' years)', '')
-        return position, company, years
+        return position, company, years, description
     except ValueError:
         return exp_entry, "Unknown Company", "Unknown Duration"
