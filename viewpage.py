@@ -2,102 +2,19 @@ import streamlit as st
 import mysql.connector
 from mysql.connector import Error
 from candidate_card import CandidateInfoApp, Candidate
-from candidate_display import display_full_candidate_details
+from candidate_display import *
+from database_operations import *
 
-# Database connection
-def create_connection():
-    try:
-        connection = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Emug123$"
-        )
-        if connection.is_connected():
-            print("Connected to MySQL server")
-            return connection
-    except Error as e:
-        st.error(f"Error connecting to database: {e}")
-        return None
-
-
-# Fetch all candidate summaries
-def fetch_detailed_candidates(connection):
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute("USE ResumeDatabase;")
-
-    query = """
-    SELECT 
-        c.candidate_id, c.name, c.email, c.phone_number, c.location,
-        GROUP_CONCAT(DISTINCT 
-            CONCAT(e.degree, ' from ', e.institution, ' (', e.graduation_year, ')') 
-            SEPARATOR '; ') AS education,
-        GROUP_CONCAT(DISTINCT 
-            CONCAT(w.position, ' at ', w.company, ' (', w.years_experience, ' years)') 
-            SEPARATOR '; ') AS work_experience,
-        GROUP_CONCAT(DISTINCT 
-            CONCAT(s.skill_name, ' (', s.skill_level, ')') 
-            SEPARATOR '; ') AS skills
-    FROM 
-        Candidates c
-    LEFT JOIN 
-        Education e ON c.candidate_id = e.candidate_id
-    LEFT JOIN 
-        WorkExperience w ON c.candidate_id = w.candidate_id
-    LEFT JOIN 
-        Skills s ON c.candidate_id = s.candidate_id
-    GROUP BY 
-        c.candidate_id
-    """
-    cursor.execute(query)
-    records = cursor.fetchall()
-    cursor.close()
-    return records
-
-
-# Fetch a single candidate's full details
-def fetch_candidate_details(connection, candidate_id):
-    cursor = connection.cursor(dictionary=True)
-    cursor.execute("USE ResumeDatabase;")
-
-    query = """
-    SELECT 
-        c.candidate_id, c.name, c.email, c.phone_number, c.location,
-        GROUP_CONCAT(DISTINCT 
-            CONCAT(e.degree, ' from ', e.institution, ' (', e.graduation_year, ')') 
-            SEPARATOR '; ') AS education,
-        GROUP_CONCAT(DISTINCT 
-            CONCAT(w.position, ' at ', w.company, ' (', w.years_experience, ' years)') 
-            SEPARATOR '; ') AS work_experience,
-        GROUP_CONCAT(DISTINCT 
-            CONCAT(s.skill_name, ' (', s.skill_level, ')') 
-            SEPARATOR '; ') AS skills
-    FROM 
-        Candidates c
-    LEFT JOIN 
-        Education e ON c.candidate_id = e.candidate_id
-    LEFT JOIN 
-        WorkExperience w ON c.candidate_id = w.candidate_id
-    LEFT JOIN 
-        Skills s ON c.candidate_id = s.candidate_id
-    WHERE 
-        c.candidate_id = %s
-    GROUP BY 
-        c.candidate_id
-    """
-    cursor.execute(query, (candidate_id,))
-    record = cursor.fetchone()
-    cursor.close()
-    return record
-
-
-
+st.set_page_config(
+    page_title="View Candidates",
+)
 
 # Main app
 def main():
     if "selected_candidate_id" not in st.session_state:
         st.session_state["selected_candidate_id"] = None
 
-    st.title("Resume Database Management")
+    st.title("Resume Database Management App")
 
     connection = create_connection()
     candidate_app = CandidateInfoApp()
@@ -106,13 +23,7 @@ def main():
     if "selected_candidate_id" in st.session_state:
         candidate_id = st.session_state.selected_candidate_id
         candidate_details = fetch_candidate_details(connection, candidate_id)
-
-        if candidate_details:
-            # Format skills as a list
-            candidate_details["skills"] = (
-                candidate_details["skills"].split("; ") if candidate_details.get("skills") else []
-            )
-            display_full_candidate_details(candidate_details)
+        display_full_candidate_details(candidate_details)
 
     if connection:
         if st.session_state.selected_candidate_id:

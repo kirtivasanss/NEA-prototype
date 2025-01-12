@@ -2,10 +2,10 @@ import json
 import pypdf
 import logging
 from datetime import datetime
-from crewai import Agent, Task, Crew, LLM
+from crewai import Agent, Task, Crew
+from langchain_groq import ChatGroq
 import os
 
-os.environ["GROQ_API_KEY"] = "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"
 # Set up logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -15,8 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 def create_agents():
+    api_key = "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"
+    llm = ChatGroq(
+        temperature=0.3,
+        model_name="gemma2-9b-it",
+        groq_api_key=api_key,
+    )
 
-    llm = LLM(model="groq/llama-3.1-70b-versatile")
     return [
         Agent(
             role='Resume Data Extractor',
@@ -101,7 +106,7 @@ def create_single_task(agent, resume_text):
 def save_json_sections(data, base_filename):
     """Save each section of the parsed resume data as a separate JSON file"""
     # Create output directory if it doesn't exist
-    output_dir = 'temp'
+    output_dir = 'parsed_resumes'
     os.makedirs(output_dir, exist_ok=True)
 
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -149,7 +154,7 @@ def main():
         logger.info("Starting resume processing")
 
         # Read PDF file
-        pdf_file = 'Amirthvarshani_V&V_eMUG.pdf'
+        pdf_file = 'resume_20241108_132047.pdf'
         base_filename = os.path.splitext(os.path.basename(pdf_file))[0]
 
         pdf_reader = pypdf.PdfReader(pdf_file)
