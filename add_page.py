@@ -1,182 +1,123 @@
+import streamlit as st
+from PyPDF2 import PdfReader
+import docx2txt
 import json
-import pypdf
-import logging
-from datetime import datetime
-from crewai import Agent, Task, Crew
-from langchain_groq import ChatGroq
 import os
+from json_store import store_json
+from create_json import create_json
 
-# Set up logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Function to extract text from a PDF file
+def extract_text_from_pdf(file):
+    reader = PdfReader(file)
+    text = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
+    return text
 
+# Function to extract text from a DOCX file
+def extract_text_from_docx(file):
+    doc = docx2txt.process(file)
+    return doc
 
-def create_agents():
-    api_key = "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"
-    llm = ChatGroq(
-        temperature=0.3,
-        model_name="gemma2-9b-it",
-        groq_api_key=api_key,
-    )
+# Save JSON files to the Temp directory
+def save_json_files(json_files, directory="Temp"):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    for file_name, content in json_files.items():
+        with open(os.path.join(directory, file_name), "w") as f:
+            f.write(content)
 
-    return [
-        Agent(
-            role='Resume Data Extractor',
-            goal='Extract all required information from the resume',
-            backstory="""Expert at parsing resumes and extracting structured information.""",
-            verbose=True,
-            llm=llm,
-            allow_delegation=False
-        )
-    ]
+# Load JSON files from the Temp directory
+def load_json_files(directory="Temp"):
+    json_files = {}
+    if os.path.exists(directory):
+        for file_name in os.listdir(directory):
+            if file_name.endswith(".json"):
+                with open(os.path.join(directory, file_name), "r") as f:
+                    json_files[file_name] = f.read()
+    return json_files
 
-
-def create_single_task(agent, resume_text):
-    return Task(
-        description=f"""Extract all required information from this resume:
-        {resume_text}
-
-        Return the data in this EXACT format (replace examples with actual data):
-        {{
-            "candidate": {{
-                "name": "John Doe",
-                "email": "john@email.com",
-                "phone_number": "123-456-7890",
-                "location": "New York, NY"
-            }},
-            "education": [{{
-                "degree": "Bachelor of Science",
-                "field_of_study": "Computer Science",
-                "institution_name": "University Name",
-                "start_date": "2018-09-01",
-                "end_date": "2022-05-31"
-            }}],
-            "experience": [{{
-                "company_name": "Tech Company",
-                "position": "Software Engineer",
-                "start_date": "2022-06-01",
-                "end_date": "2023-12-31",
-                "description": "Job description here"
-            }}],
-            "skills": [{{
-                "skill_name": "Python",
-                "proficiency": "expert"
-            }}]
-        }}
-
-        IMPORTANT:
-        1. Use ONLY this exact JSON structure
-        2. All dates must be in YYYY-MM-DD format
-        3. Skill proficiency must be one of: beginner, intermediate, expert
-        4. Do not add any additional text or formatting
-        """,
-        agent=agent,
-        expected_output="""{ 
-            "candidate": {
-                "name": "string",
-                "email": "string",
-                "phone_number": "string",
-                "location": "string"
-            },
-            "education": [{
-                "degree": "string",
-                "field_of_study": "string",
-                "institution_name": "string",
-                "start_date": "string",
-                "end_date": "string"
-            }],
-            "experience": [{
-                "company_name": "string",
-                "position": "string",
-                "start_date": "string",
-                "end_date": "string",
-                "description": "string"
-            }],
-            "skills": [{
-                "skill_name": "string",
-                "proficiency": "string"
-            }]
-        }"""
-    )
-
-
-def save_json_sections(data, base_filename):
-    """Save each section of the parsed resume data as a separate JSON file"""
-    # Create output directory if it doesn't exist
-    output_dir = 'parsed_resumes'
-    os.makedirs(output_dir, exist_ok=True)
-
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-    # Save each section separately
-    for section in ['candidate', 'education', 'experience', 'skills']:
-        if section in data:
-            filename = f"{output_dir}/{base_filename}_{section}_{timestamp}.json"
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(data[section], f, indent=4)
-            logger.info(f"Saved {section} data to {filename}")
-
-
-def process_resume(resume_text, base_filename):
-    try:
-        # Create single agent and task
-        agents = create_agents()
-        task = create_single_task(agents[0], resume_text)
-        crew = Crew(agents=agents, tasks=[task], verbose=True)
-
-        # Get result and parse JSON
-        result = crew.kickoff()
-        result_str = str(result)
-
-        # Extract JSON from the result
-        start_idx = result_str.find('{')
-        end_idx = result_str.rfind('}') + 1
-        json_str = result_str[start_idx:end_idx]
-
-        # Parse the JSON data
-        data = json.loads(json_str)
-
-        # Save the parsed data as separate JSON files
-        save_json_sections(data, base_filename)
-
-        return True, "Resume processed successfully"
-
-    except Exception as e:
-        logger.error(f"Error processing resume: {str(e)}")
-        return False, f"Error processing resume: {str(e)}"
-
-
+# Main function to run the Streamlit app
 def main():
-    try:
-        logger.info("Starting resume processing")
+    st.title("Document to Text Converter")
+    st.markdown("Upload PDF or DOCX files, and process them into editable JSON files.")
 
-        # Read PDF file
-        pdf_file = 'resume_20241108_132047.pdf'
-        base_filename = os.path.splitext(os.path.basename(pdf_file))[0]
+    # Display JSON files from the Temp directory
+    st.header("Previously Saved JSON Files")
+    saved_json_files = load_json_files()
+    if saved_json_files:
+        for file_name, content in saved_json_files.items():
+            with st.expander(file_name):
+                st.text_area(f"Content of {file_name}", content, height=200, key=f"saved_{file_name}")
+    else:
+        st.info("No previously saved JSON files found in the Temp directory.")
 
-        pdf_reader = pypdf.PdfReader(pdf_file)
-        text = ""
-        for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
-        resume_text = text.strip()
+    # File uploader for multiple files
+    uploaded_files = st.file_uploader("Upload PDF or DOCX files", type=["pdf", "docx"], accept_multiple_files=True)
 
-        # Process resume
-        success, message = process_resume(resume_text, base_filename)
+    if "processed_file" not in st.session_state:
+        st.session_state["processed_file"] = None
+    if "resume_text" not in st.session_state:
+        st.session_state["resume_text"] = None
+    if "json_files" not in st.session_state:
+        st.session_state["json_files"] = {}
 
-        if success:
-            logger.info("Successfully processed resume")
-            print("Successfully processed resume")
-        else:
-            logger.error(f"Failed to process resume: {message}")
-            print(f"Failed to process resume: {message}")
+    # Process button
+    if uploaded_files:
+        st.write(f"You uploaded {len(uploaded_files)} files.")
 
-    except Exception as e:
-        logger.error(f"Error in main: {str(e)}")
-        print(f"Error in main: {str(e)}")
+        if st.button("Process Resumes"):
+            # Simulate processing the first file only for simplicity
+            file_to_process = uploaded_files[0]
 
+            try:
+                if file_to_process.name.endswith(".pdf"):
+                    st.session_state["resume_text"] = extract_text_from_pdf(file_to_process)
+                elif file_to_process.name.endswith(".docx"):
+                    st.session_state["resume_text"] = extract_text_from_docx(file_to_process)
+                else:
+                    st.warning(f"Unsupported file type: {file_to_process.name}")
+                    st.stop()
+
+                st.session_state["processed_file"] = file_to_process.name
+
+                # Create JSON files from the processed resume
+                with st.spinner("Processing resume and creating JSON files..."):
+                    create_json(st.session_state["resume_text"])
+
+                # Load JSON files for editing
+                st.session_state["json_files"] = load_json_files()
+
+                st.rerun()
+
+            except Exception as e:
+                st.error(f"Error processing {file_to_process.name}: {e}")
+
+    if st.session_state["processed_file"]:
+        st.header(f"Processing: {st.session_state['processed_file']}")
+
+        # Show resume text in a dropdown section
+        with st.expander("Resume Text"):
+            st.text_area("Extracted Text", st.session_state["resume_text"], height=300)
+
+        # Show and edit JSON files
+        edited_json_files = {}
+        for file_name, content in st.session_state["json_files"].items():
+            with st.expander(file_name):
+                edited_content = st.text_area(f"Edit {file_name}", content, height=200)
+                edited_json_files[file_name] = edited_content
+
+        # Save changes and trigger next function
+        if st.button("Save and Proceed"):
+            save_json_files(edited_json_files)
+            st.session_state["json_files"] = edited_json_files
+
+            # Store JSON files in the database
+            with st.spinner("Saving and storing JSON files..."):
+                store_json()
+
+            st.success("Files saved and stored in the database. Starting next function...")
+            # Add your next function here
+    else:
+        st.info("Upload and process a file to begin.")
 
 if __name__ == "__main__":
     main()

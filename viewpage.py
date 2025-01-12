@@ -1,6 +1,4 @@
 import streamlit as st
-import mysql.connector
-from mysql.connector import Error
 from candidate_card import CandidateInfoApp, Candidate
 from candidate_display import *
 from database_operations import *
