@@ -1,104 +1,74 @@
 import streamlit as st
-import pinecone
-import numpy as np
-from torch import Tensor
-from transformers import AutoTokenizer, AutoModel
-import fitz  # PyMuPDF for PDF extraction
-from pinecone import Pinecone, ServerlessSpec
-import os
-from sentence_transformers import SentenceTransformer
-# Initialize Pinecone
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2', trust_remote_code=True)
-# In case you want to reduce the maximum length:
-model.max_seq_length = 8192
+import mysql.connector
 
-os.environ['PINECONE_API_KEY'] = "pcsk_6LpRrv_SAE5Taobgp5ATyTsGoberaoCx6pQ9a3ecwY7dViqUvQgRcTgnEazhexmpeEfBzm"
-INDEX_NAME = "nea"
+# Function to fetch candidates from the database based on search criteria
+def search_candidates(search_query, connection):
+    cursor = connection.cursor(dictionary=True)  # Use dictionary=True to fetch rows as dictionaries
+    query = """
+    SELECT candidate_id, name, email, phone_number, location, graduation_year 
+    FROM Candidates
+    WHERE name LIKE %s OR email LIKE %s OR location LIKE %s
+    """
+    search_term = f"%{search_query}%"  # For partial matching
+    cursor.execute(query, (search_term, search_term, search_term))
+    candidates = cursor.fetchall()
+    cursor.close()
+    return candidates
 
-pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+# Function to display candidates as cards
+def display_candidates(connection):
+    st.title("Search Resumes")
+    search_query = st.text_input("Search by Name, Email, or Location", "")
 
-if INDEX_NAME not in pc.list_indexes().names():
-    pc.create_index(name=INDEX_NAME, dimension=768, metric="cosine")
+    # Fetch candidates based on the search query
+    if search_query:
+        candidates = search_candidates(search_query, connection)
 
-# Connect to the index
-index = pc.Index(INDEX_NAME)
+        if candidates:
+            st.subheader(f"Found {len(candidates)} Candidate(s)")
+            for candidate in candidates:
+                # Display each candidate in a card
+                with st.container():
+                    st.markdown(
+                        f"""
+                        **Name:** {candidate['name']}  
+                        **Email:** {candidate['email']}  
+                        **Phone Number:** {candidate['phone_number']}  
+                        **Location:** {candidate['location']}  
+                        **Graduation Year:** {candidate['graduation_year']}  
+                        """,
+                        unsafe_allow_html=True,
+                    )
 
-
-# Load the model and tokenizer
-
-
-# Function to extract text from PDF
-def extract_text_from_pdf(file):
-    with fitz.open(stream=file.read(), filetype="pdf") as pdf:
-        text = ""
-        for page in pdf:
-            text += page.get_text()
-    return text
-
-
-# Function to generate embeddings
-
-
-
-# Streamlit session state initialization
-if "uploaded_resumes" not in st.session_state:
-    st.session_state["uploaded_resumes"] = []  # List to store uploaded resumes
-if "query_results" not in st.session_state:
-    st.session_state["query_results"] = []  # List to store query results
-
-# Sidebar: Upload Resumes
-st.sidebar.header("Upload Resumes")
-uploaded_files = st.sidebar.file_uploader(
-    "Upload PDF Resumes", type=["pdf"], accept_multiple_files=True
-)
-
-if uploaded_files:
-    for uploaded_file in uploaded_files:
-        # Extract text and generate embeddings
-        resume_text = extract_text_from_pdf(uploaded_file)
-        embedding = model.encode(resume_text)
-
-        # Upsert to Pinecone
-        index.upsert(
-            vectors=[
-                (
-                    uploaded_file.name,  # Use the file name as the unique ID
-                    embedding,
-                    {"content": resume_text},
-                )
-            ]
-        )
-        # Store uploaded resumes in session state
-        st.session_state["uploaded_resumes"].append(
-            {"file_name": uploaded_file.name, "content": resume_text}
-        )
-    st.sidebar.success("Resumes uploaded and indexed successfully!")
-
-# Main Page: Job Description Search
-st.title("Resume Matching with AI")
-
-job_description = st.text_area("Enter Job Description", height=200)
-
-if st.button("Search"):
-    if not job_description.strip():
-        st.warning("Please enter a job description.")
+                    # View details button for each candidate
+                    if st.button(
+                        f"View Details: {candidate['name']}",
+                        key=f"view_{candidate['candidate_id']}",
+                    ):
+                        st.session_state.selected_candidate_id = candidate["candidate_id"]
+                        st.experimental_rerun()  # Refresh the page to show details for the selected candidate
+        else:
+            st.info("No candidates found. Try refining your search.")
     else:
-        # Generate embedding for job description
-        query_embedding = model.encode(job_description,prompt_name="query")
+        st.info("Enter a search query to find candidates.")
 
-        # Query Pinecone
-        results = index.query(
-            vector=query_embedding, top_k=5, include_metadata=True
-        )
+# Main function
+def main():
+    # Establish database connection
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="your_username",
+        password="your_password",
+        database="your_database",
+    )
 
-        # Store query results in session state
-        st.session_state["query_results"] = results["matches"]
+    # Ensure connection is closed properly
+    try:
+        display_candidates(connection)
+    except Exception as e:
+        st.error(f"Error: {e}")
+    finally:
+        connection.close()
 
-# Display Query Results
-if st.session_state["query_results"]:
-    st.subheader("Matching Resumes")
-    for match in st.session_state["query_results"]:
-        st.write(f"**File Name**: {match['id']}")
-        st.write(f"**Similarity Score**: {match['score']:.4f}")
-        st.write(f"**Content**: {match['metadata']['content'][:300]}...")  # Display the first 300 characters
-        st.write("---")
+if __name__ == "__main__":
+    main()

@@ -90,7 +90,7 @@ def display_experience(company, position, years,description):
     ">
         <h4 style="margin: 0; color: #FAFAFA;">{company}</h4>
         <p style="margin: 5px 0 0; color: #f0f3f4;"><b>{position}</b></p>
-        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{years}</b></p>  
+        <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{years[:-1]} year(s)</b></p>  
         <p style="margin: 5px 0 0; color: #b3b6b7;"><b>{description}</b></p>  
     </div>
     """, unsafe_allow_html=True)

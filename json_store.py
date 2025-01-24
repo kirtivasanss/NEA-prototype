@@ -1,6 +1,7 @@
 import os
 import json
 from database_operations import *
+from store_emeddings import insert_embeddings
 from glob import glob
 
 
@@ -10,7 +11,7 @@ def reset():
         os.remove(f)
 
 
-def store_json():
+def store_json(text):
     try:
         connection = create_connection()
         cursor = connection.cursor()
@@ -49,6 +50,9 @@ def store_json():
     # Insert skills data if available
 
         insert_skills_data(cursor, candidate_id, skills_data)
+
+
+        insert_embeddings(candidate_id,text)
 
         reset()
 

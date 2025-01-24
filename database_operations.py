@@ -35,7 +35,7 @@ def fetch_candidate_details(connection, candidate_id):
             CONCAT(w.position, ' at ', w.company, ' (', w.years_experience, ' years), desc', w.description) 
             SEPARATOR '; ') AS work_experience,
         GROUP_CONCAT(DISTINCT 
-            CONCAT(s.skill_name, ' (', s.skill_level, ')') 
+            CONCAT(s.skill_name, ' ') 
             SEPARATOR '; ') AS skills
     FROM 
         Candidates c
@@ -69,7 +69,7 @@ def fetch_detailed_candidates(connection):
             CONCAT(w.position, ' at ', w.company, ' (', w.years_experience, ' years)') 
             SEPARATOR '; ') AS work_experience,
         GROUP_CONCAT(DISTINCT 
-            CONCAT(s.skill_name, ' (', s.skill_level, ')') 
+            CONCAT(s.skill_name, ' ') 
             SEPARATOR '; ') AS skills
     FROM 
         Candidates c

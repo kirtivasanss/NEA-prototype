@@ -8,16 +8,15 @@ mydb = mysql.connector.connect(
     )
 
 mycursor = mydb.cursor()
-
+mycursor.execute("""
+        CREATE TABLE IF NOT EXISTS ResumeEmbeddings (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            candidate_id INT NOT NULL,
+            embedding TEXT NOT NULL,
+            FOREIGN KEY (candidate_id) REFERENCES Candidates(candidate_id) ON DELETE CASCADE
+        )
+        """)
 mycursor.execute("Show tables;")
-
-myresult = mycursor.fetchall()
-
-for x in myresult:
-    print(x)
-
-mycursor.execute( "SELECT * FROM Education WHERE candidate_id = 82")
-
 myresult = mycursor.fetchall()
 
 for x in myresult:

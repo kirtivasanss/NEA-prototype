@@ -5,7 +5,7 @@ import json
 import os
 from json_store import store_json
 from create_json import create_json
-
+from store_emeddings import insert_embeddings
 
 def extract_text_from_pdf(file):
     reader = PdfReader(file)
@@ -109,7 +109,7 @@ def main():
                 if st.button("Save and Process Next"):
                     save_json_files(edited_json_files)
                     with st.spinner("Saving and storing JSON files..."):
-                        store_json()
+                        store_json(text=st.session_state["resume_text"])
 
                     # Move to next file or complete
                     if current_index + 1 < total_files:
