@@ -133,6 +133,7 @@ def display_info(candidate):
         </div>
         """, unsafe_allow_html=True)
 
+
 def parse_education_entry(edu_entry):
     """
     Parse an education entry into its components.
