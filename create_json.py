@@ -9,7 +9,7 @@ import os
 def create_agents():
     os.environ['GROQ_API_KEY'] = "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"
 
-    llm = LLM("groq/llama-3.1-70b-versatile")
+    llm = LLM("groq/llama-3.1-8b-instant")
 
     return [
         Agent(

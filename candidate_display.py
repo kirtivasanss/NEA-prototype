@@ -28,9 +28,7 @@ def display_full_candidate_details(candidate):
         if education:
             for edu in education:
                 degree, institution, year = parse_education_entry(edu)
-                display_education(institution,degree,
-                    graduation_year=f"Graduation Year: {year}",
-                )
+                display_education(institution, degree, f"Graduation Year: {year}")
         else:
             st.write("No education details available.")
 
@@ -40,12 +38,7 @@ def display_full_candidate_details(candidate):
         if experience:
             for exp in experience:
                 position, company, years, description = parse_experience_entry(exp)
-                display_experience(
-                    position=position,
-                    company=company,
-                    years=f"Experience: {years}",
-                description= description,
-                )
+                display_experience(position, company, f"Experience: {years}", description)
         else:
             st.write("No work experience available.")
 
