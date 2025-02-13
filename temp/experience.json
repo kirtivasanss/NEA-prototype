@@ -1,0 +1,23 @@
+[
+    {
+        "company_name": "ZF Commercial Vehicle Control Systems",
+        "position": "SENIOR HIL VALIDATION ENGINEER",
+        "start_date": "10/10/2022",
+        "end_date": "CURRENT",
+        "description": "ISTQB Certi\ufb01ed HIL Validation Engineer with 5.5+ years of rich hands-on experience in manual and automation diagnostic and functional testing of Body components of passenger vehicles like BCM, Wiper washer, Internal lighting, etc., and Battery Management system for EVs focused on vehicle functionality level System testing using dSpace and OpalRT based HIL test setups."
+    },
+    {
+        "company_name": "Ford Motor Company",
+        "position": "SENIOR HIL AUTOMATION ENGINEER",
+        "start_date": "15/03/2021",
+        "end_date": "05/10/2022",
+        "description": "Validated and tested 3 critical BECM feature - Cell balancing , Charge Energy, AC/DC Charging for BEV & FHEV variant programs."
+    },
+    {
+        "company_name": "Stellantis (formerly FCA)",
+        "position": "HIL VALIDATION ENGINEER",
+        "start_date": "15/07/2018",
+        "end_date": "10/03/2021",
+        "description": "System testing of Jeep Grand Cherokee Body components"
+    }
+]

@@ -9,7 +9,10 @@ import os
 def create_agents():
     os.environ['GROQ_API_KEY'] = "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"
 
-    llm = LLM("groq/llama-3.1-8b-instant")
+    llm = LLM(
+        model="groq/llama-3.1-8b-instant",
+        temperature=0.7
+    )
 
     return [
         Agent(
@@ -31,34 +34,33 @@ def create_single_task(agent, resume_text):
         Return the data in this EXACT format (replace examples with actual data):
         {{
             "candidate": {{
-                "name": "John Doe",
-                "email": "john@email.com",
-                "phone_number": "123-456-7890",
-                "location": "New York, NY"
+                "name": "",
+                "email": "",
+                "phone_number": "",
+                "location": ""
             }},
             "education": [{{
-                "degree": "Bachelor of Science",
-                "field_of_study": "Computer Science",
-                "institution_name": "University Name",
-                "start_date": "2018-09-01",
-                "end_date": "2022-05-31"
+                "degree": "",
+                "field_of_study": "",
+                "institution_name": "",
+                "start_date": "",
+                "end_date": ""
             }}],
             "experience": [{{
-                "company_name": "Tech Company",
-                "position": "Software Engineer",
-                "start_date": "2022-06-01",
-                "end_date": "2023-12-31",
-                "description": "Job description here"
+                "company_name": "",
+                "position": "",
+                "start_date": "",
+                "end_date": "",
+                "description": ""
             }}],
             "skills": [{{
-                "skill_name": "Python"
+                "skill_name": ""
             }}]
         }}
 
         IMPORTANT:
         1. Use ONLY this exact JSON structure
-        2. All dates must be in YYYY-MM-DD format
-        3. Skill proficiency must be one of: beginner, intermediate, expert
+        2. All dates must be in YYYY-MM-DD format 
         4. Do not add any additional text or formatting
         """,
         agent=agent,
