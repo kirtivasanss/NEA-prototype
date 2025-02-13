@@ -6,9 +6,6 @@ from search_page import searchPage
 from account_page import accountPage
 from database_operations import create_tables,create_connection
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 pages = st.navigation(
     [
