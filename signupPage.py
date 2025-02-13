@@ -142,7 +142,7 @@ def signupPage():
                 if not password_valid:
                     st.error(password_msg)
                     st.session_state['show_password_requirements'] = True
-                    st.experimental_rerun()
+                    st.rerun()
                     return
                 # Check password confirmation
                 if password != password_confirm:
