@@ -4,4 +4,4 @@ streamlit-authenticator
 crewai
 PyPDF2
 docx2txt
-sqlite3===3.35.0.
+sqlite===3.41.2
