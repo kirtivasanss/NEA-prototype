@@ -54,7 +54,6 @@ def load_resume_embeddings():
         conn.close()
         return []
 
-
     rows = cursor.fetchall()
     conn.close()
 
@@ -142,7 +141,6 @@ def searchPage():
             sorted_candidates = sorted(filtered_candidates, key=lambda x: x[1], reverse=True)
             top_candidates = sorted_candidates[:top_n]
 
-
             st.subheader("Top Matching Candidates (Similarity Score ≥ 0.7):")
             if top_candidates:
                 for candidate_id, score in top_candidates:
@@ -161,11 +159,10 @@ def searchPage():
                         currentRole='Not specified',
                         company='Not specified'
                     )
-                    st.write(candidate)
                     st.write(f"**Similarity Score:** {score:.2f}")
                     display_candidate_info(candidate)
 
-                    if st.button(f"View Details: {candidate.candidate_id}", key=f"view_{candidate['candidate_id']}"):
+                    if st.button(f"View Details: {candidate.candidate_id}", key=f"view_{candidate.candidate_id}"):
                         st.session_state["selected_candidate_id"] = candidate.candidate_id
                         st.rerun()
             else:

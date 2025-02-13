@@ -16,7 +16,6 @@ def search_candidates_by_name(connection, name: str):
     search_term = f"%{name}%"
     cursor.execute(query, (search_term,))
     results = cursor.fetchall()
-    cursor.close()
     return results
 
 
@@ -32,7 +31,7 @@ def viewPage():
         # Add search functionality at the top
         search_col1, search_col2 = st.columns([3, 1])
         with search_col1:
-            search_query = st.text_input("Search candidates by name:", "")
+            search_query = st.text_input(placeholder="Search candidates by name:",label = "",value="")
         with search_col2:
             clear_search = st.button("Clear Search")
             if clear_search:

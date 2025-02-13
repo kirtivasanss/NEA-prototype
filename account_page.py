@@ -15,6 +15,23 @@ def save_auth_config(config):
     with open("credentials.yaml", "w") as file:
         yaml.dump(config, file, default_flow_style=False)
 
+def validate_password(password):
+    """
+    Validate password strength using regex.
+    Returns (is_valid, message)
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number"
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False, "Password must contain at least one special character"
+    return True, "Password meets requirements"
+
 def accountPage():
     # Load authentication configuration and initialize the authenticator
     config = load_auth_config()
@@ -25,6 +42,12 @@ def accountPage():
         config['cookie']['expiry_days'],
         config['pre-authorized']
     )
+    # Initialize session state values.
+    if 'authentication_status' not in st.session_state:
+        st.session_state['authentication_status'] = None
+    if 'show_password_requirements' not in st.session_state:
+        st.session_state['show_password_requirements'] = False
+
 
     # If the user is not logged in, stop execution and ask for login
     if not st.session_state.get("authentication_status"):
@@ -45,25 +68,38 @@ def accountPage():
 
     with account_tabs[0]:
         st.subheader("Reset Password")
+
         # Provide a button to reset the password
-        if st.button("Reset Password"):
+
+        if st.session_state['authentication_status']:
+            with st.expander("Password Requirements", expanded=st.session_state['show_password_requirements']):
+                st.info("""
+                Your password must contain:
+                - At least 8 characters
+                - At least one uppercase letter
+                - At least one lowercase letter
+                - At least one number
+                - At least one special character (!@#$%^&*(),.?":{}|<>)
+                """)
+
             try:
-                if authenticator.reset_password(st.session_state["username"], "main"):
-                    st.success("Password reset successfully!")
+                if authenticator.reset_password(st.session_state['username']):
                     save_auth_config(config)
+                    st.success('Password modified successfully')
             except Exception as e:
-                st.error(f"Error resetting password: {e}")
+                st.error(e)
 
     with account_tabs[1]:
         st.subheader("Update Profile")
         # Provide a button to update user details
-        if st.button("Update Profile"):
+
+        if st.session_state['authentication_status']:
             try:
-                if authenticator.update_user_details(st.session_state["username"], "main"):
-                    st.success("Profile updated successfully!")
+                if authenticator.update_user_details(st.session_state['username']):
                     save_auth_config(config)
+                    st.success('Entries updated successfully')
             except Exception as e:
-                st.error(f"Error updating profile: {e}")
+                st.error(e)
 
 if __name__ == '__main__':
     accountPage()

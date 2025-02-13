@@ -207,6 +207,7 @@ def insert_education_data(cursor, candidate_id, education_data):
             year
         ))
 
+
 def insert_work_experience_data(cursor, candidate_id, work_experience_data):
     cursor.execute("USE ResumeDatabase;")
     # Insert data into the WorkExperience table.
@@ -235,6 +236,7 @@ def insert_work_experience_data(cursor, candidate_id, work_experience_data):
             work['description']
         ))
 
+
 def insert_skills_data(cursor, candidate_id, skills_data):
     cursor.execute("USE ResumeDatabase;")
     # Insert data into the Skills table.
@@ -246,13 +248,13 @@ def insert_skills_data(cursor, candidate_id, skills_data):
             skill['skill_name']
         ))
 
+
 def insert_feedback(cursor ,candidate_id, feedback, reviewer):
     query = """
     INSERT INTO CandidateFeedback (candidate_id, feedback, reviewer) 
     VALUES (%s, %s, %s)
     """
     cursor.execute(query, (candidate_id, feedback, reviewer))
-
 
 
 def delete_candidate(cursor,candidate_id):
@@ -273,8 +275,6 @@ def delete_candidate(cursor,candidate_id):
         print(f"Error deleting candidate: {err}")
         cursor.rollback()
         raise
-
-
 
 
 def update_candidate(candidate_id, name, email, phone_number, location):

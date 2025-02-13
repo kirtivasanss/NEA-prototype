@@ -1,0 +1,15 @@
+streamlit
+import mysql.connector
+import numpy as np
+import ast
+import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
+import re
+import json
+from datetime import datetime
+import streamlit as st
+from crewai import Agent, Task, Crew, LLM
+import os
+from PyPDF2 import PdfReader
+import docx2txt
