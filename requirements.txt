@@ -1,6 +1,5 @@
 streamlit
 mysql-connector-python
-ast
 streamlit_authenticator
 yaml
 yaml.loader
