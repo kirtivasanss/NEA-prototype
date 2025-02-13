@@ -4,4 +4,4 @@ streamlit-authenticator
 crewai
 PyPDF2
 docx2txt
-sqlite3
+pysqlite3-binary
