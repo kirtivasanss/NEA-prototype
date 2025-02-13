@@ -21,11 +21,12 @@ def create_connection():
         st.error(f"Error connecting to database: {e}")
         return None
 
-def create_tables(cursor):
+def create_tables(connection):
     """
     Create tables in SQLite database with proper schema and relationships.
     Includes error handling for table creation failures.
     """
+    cursor = connection.cursor()
     # Define table schemas using SQLite syntax
     tables = [
         """CREATE TABLE IF NOT EXISTS Candidates (
@@ -81,8 +82,6 @@ def create_tables(cursor):
             cursor.execute(table)
         except Exception as err:
             print(f"Failed to create table: {err}")
-            cursor.rollback()
-            exit(1)
     cursor.commit()
 
 def fetch_candidate_details(connection, candidate_id):

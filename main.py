@@ -6,10 +6,6 @@ from search_page import searchPage
 from account_page import accountPage
 from database_operations import create_tables,create_connection
 
-connection = create_connection
-cursor = connection.cursor()
-
-create_tables(cursor)
 
 pages = st.navigation(
     [

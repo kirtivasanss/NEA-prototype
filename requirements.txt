@@ -1,12 +1,7 @@
 streamlit
 mysql-connector-python
-streamlit_authenticator
-yaml
+streamlit-authenticator
 yaml.loader
-re
-json
-datetime
 crewai
-os
 PyPDF2
 docx2txt
