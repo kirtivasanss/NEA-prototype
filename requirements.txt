@@ -4,4 +4,4 @@ streamlit-authenticator
 crewai
 PyPDF2
 docx2txt
-chromadb
+sqlite3
